@@ -1,3 +1,9 @@
+import Tabs from "./_component/Tabs";
+
 export default function Home() {
-  return <main>main</main>;
+  return (
+    <main>
+      <Tabs />
+    </main>
+  );
 }
