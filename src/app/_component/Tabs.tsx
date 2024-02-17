@@ -4,7 +4,7 @@ import React, { useState } from "react";
 
 import styles from "./tabs.module.css";
 
-const Tabs: React.FC = () => {
+export default function Tabs() {
   const tabs: string[] = ["전체", "이슈", "라이프", "정치・경제", "기타"];
   const [activeTab, setActiveTab] = useState<number>(0);
 
@@ -21,6 +21,4 @@ const Tabs: React.FC = () => {
       ))}
     </div>
   );
-};
-
-export default Tabs;
+}
