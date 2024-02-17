@@ -1,4 +1,4 @@
-.tabsContainer {
+.tabsMenuContainer {
   display: flex;
   justify-content: space-around;
   border-top: 1px solid var(--background-200);
@@ -19,4 +19,59 @@
 
 .tab.active {
   color: var(--main-primary-500);
+}
+
+.tabsProfileContainer {
+  width: 390px;
+  border-bottom: 1px solid var(--background-200);
+}
+
+.profileTab {
+  width: 130px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 2px solid var(--line-100);
+}
+
+.tabLabel {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 10px;
+  color: var(--body-800);
+}
+
+.tabCount {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--main-primary-500);
+}
+
+.active {
+  border-bottom-color: var(--title-100);
+}
+
+.tabsContainer {
+  display: flex;
+  justify-content: space-around;
+}
+
+.profileTab {
+  width: 130px;
+  display: inline-block;
+  padding-bottom: 10px;
+}
+
+.profileTab.active .tabContent .tabLabel {
+  font-weight: 700;
+  color: var(--title-400);
+}
+
+.tabContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
