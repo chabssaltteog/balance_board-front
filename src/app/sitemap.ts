@@ -1,17 +1,19 @@
 import { MetadataRoute } from "next";
 
-import { IAuth } from "@/context/AuthContext";
 import { IPost } from "@/modal/Post";
 
 import { getPostList } from "./_main/_lib/getPosts";
+import { ILogin } from "./login/_component/LoginForm";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const user: IAuth = {
+  const user: ILogin = {
     email: "",
     jwtToken: {
       accessToken: "",
       refreshToken: "",
     },
+    accessToken: "",
+    refreshToken: "",
     nickname: "",
     userId: 1,
     isLogin: 0,
@@ -20,11 +22,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const postList: IPost[] = await getPostList({ pageParam: 0, userInfo: user, size: 100 });
 
   const postEntries: MetadataRoute.Sitemap = postList.map((v) => ({
-    url: `https://balanceboard.swygbro.com/postDetail/${v.postId}`,
+    // https://balanceboard.swygbro.com
+    url: `http://localhost:3000/postDetail/${v.postId}`,
+    lastModified: new Date(),
+    changeFrequency: "daily",
   }));
   return [
     {
-      url: `https://balanceboard.swygbro.com`,
+      // https://balanceboard.swygbro.com
+      url: `http://localhost:3000`,
       lastModified: new Date(),
     },
     ...postEntries,
