@@ -1,28 +1,27 @@
 "use client";
+import React, { Fragment, useEffect, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
-import React, { Fragment, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
 import LoginModal from "@/app/_component/LoginModal";
+import { useModal } from "@/hook/useModal";
 import ModalContainer from "@/app/_component/ModalContainer";
 import ModalPortal from "@/app/_component/ModalPortal";
 import PostCard from "@/app/_component/PostCard";
-import { useUserDataContext } from "@/context/AuthContext";
-import { useModal } from "@/hook/useModal";
 import { IPost } from "@/modal/Post";
 
 import { getCategoryPostList, getPostList } from "../_lib/getPosts";
 import styles from "./postCartList.module.css";
-import WriteFloating from "./WriteFloating";
 
-// import styles from './post'
-export default function PostCardList() {
-  const { userInfo } = useUserDataContext();
+import WriteFloating from "./WriteFloating";
+import { ILogin } from "@/app/login/_component/LoginForm";
+
+export default function PostCardList({ userInfo }: { userInfo: ILogin | undefined }) {
   const { openModal, handleOpenMoal, handleCloseModal } = useModal();
 
   const openLoginModal = () => {
-    if (userInfo.isLogin !== 1) {
+    if (userInfo?.isLogin !== 1) {
       handleOpenMoal();
     }
   };
@@ -31,7 +30,7 @@ export default function PostCardList() {
   const tab = searchParams.get("tab");
 
   const { data, fetchNextPage, hasNextPage, isFetching, isPending } = useInfiniteQuery<IPost[], Error>({
-    queryKey: ["posts", "all", tab, userInfo.isLogin],
+    queryKey: ["posts", "all", tab, userInfo?.isLogin],
     queryFn: async ({ pageParam }) => {
       const page = pageParam as number;
       if (!tab || tab === "전체") {

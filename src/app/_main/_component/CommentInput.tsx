@@ -4,7 +4,7 @@ import Image from "next/image";
 import React, { ChangeEventHandler, FormEvent, useState } from "react";
 
 import TextArea from "@/app/_component/TextArea";
-import { useUserDataContext } from "@/context/AuthContext";
+import { useSession } from "next-auth/react";
 import { IPost } from "@/modal/Post";
 import { constant } from "@/utils/constant";
 import { userImgUrl } from "@/utils/userImgUrl";
@@ -16,7 +16,8 @@ interface IProps {
 }
 
 export default function CommentInput({ postId }: IProps) {
-  const { userInfo } = useUserDataContext();
+  const { data: userData } = useSession();
+  const userInfo = userData?.user;
   const [comment, setComment] = useState("");
   const queryClient = useQueryClient();
 
@@ -27,10 +28,11 @@ export default function CommentInput({ postId }: IProps) {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
+          Authorization: `Bearer ${userInfo?.accessToken}`,
         },
         body: JSON.stringify({
           postId,
-          userId: userInfo.userId,
+          userId: userInfo?.userId,
           content: comment,
         }),
       });
@@ -90,8 +92,8 @@ export default function CommentInput({ postId }: IProps) {
 
   return (
     <form onSubmit={handleSumbit} className={styles.container}>
-      {userInfo.isLogin === 1 ? (
-        <Image src={userImgUrl(userInfo.imageType)} width={24} height={24} alt="유저 이미지" />
+      {userInfo?.isLogin === 1 ? (
+        <Image src={userImgUrl(userInfo?.imageType)} width={24} height={24} alt="유저 이미지" />
       ) : (
         <Image src={"/profile-md-test.png"} width={24} height={24} alt="유저 이미지" />
       )}

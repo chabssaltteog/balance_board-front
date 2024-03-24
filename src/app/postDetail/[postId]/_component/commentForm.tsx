@@ -8,22 +8,23 @@ import LoginModal from "@/app/_component/LoginModal";
 import ModalContainer from "@/app/_component/ModalContainer";
 import ModalPortal from "@/app/_component/ModalPortal";
 import TextArea from "@/app/_component/TextArea";
-import { useUserDataContext } from "@/context/AuthContext";
 import { useModal } from "@/hook/useModal";
 import { constant } from "@/utils/constant";
 import { userImgUrl } from "@/utils/userImgUrl";
 
 import { IComment, IPostData } from "../interfaces";
 import styles from "../postDetail.module.css";
+import { useSession } from "next-auth/react";
 
 interface ICommentFormProps {
-  userImage: number;
+  userImage: number | undefined;
   postData: IPostData;
 }
 
 export default function CommentForm({ userImage, postData }: ICommentFormProps) {
   const queryClient = useQueryClient();
-  const { userInfo } = useUserDataContext();
+  const { data: userData } = useSession();
+  const userInfo = userData?.user;
   const [newComment, setNewComment] = useState<string>("");
   const [isComment, setIsComment] = useState<boolean>(false);
   const { openModal, handleOpenMoal, handleCloseModal } = useModal();
@@ -41,7 +42,7 @@ export default function CommentForm({ userImage, postData }: ICommentFormProps) 
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: userInfo.userId,
+          userId: userInfo?.userId,
           postId: postData?.postId,
           content: newComment,
         }),
@@ -89,7 +90,7 @@ export default function CommentForm({ userImage, postData }: ICommentFormProps) 
     <form
       onSubmit={handleCommentSubmit}
       className={styles.commentRegContainer}
-      onClick={userInfo.isLogin !== 1 ? handleOpenMoal : undefined}
+      onClick={userInfo?.isLogin !== 1 ? handleOpenMoal : undefined}
     >
       <div className={styles.voteButtonImageContainer}>
         {userImage ? (

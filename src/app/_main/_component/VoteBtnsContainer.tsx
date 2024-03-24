@@ -5,7 +5,8 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 
 import Button, { IButton } from "@/app/_component/Button";
-import { useUserDataContext } from "@/context/AuthContext";
+import { useSession } from "next-auth/react";
+
 import { IPost } from "@/modal/Post";
 
 import { doVote } from "../_lib/doVote";
@@ -36,13 +37,15 @@ export default function VoteBtnsContainer({
   const option1Percent = ((option1Count / (voteCount || 1)) * 100).toFixed(1);
   const option2Percent = ((option2Count / (voteCount || 1)) * 100).toFixed(1);
   const queryClient = useQueryClient();
-  const { userInfo } = useUserDataContext();
+  // const { userInfo } = useUserDataContext();
+  const { data: userData } = useSession();
+  const userInfo = userData?.user;
   const [option1BtnType, setOption1BtnType] = useState(0);
   const [option2BtnType, setOption2BtnType] = useState(0);
   const [disableVoteBtn, setDisableVoteBtnVoteBtn] = useState(false);
   const [selectOption, setSelectOption] = useState("");
   const clickOption = (value: string) => {
-    if (userInfo.isLogin !== 1) {
+    if (userInfo?.isLogin !== 1) {
       openLoginModal && openLoginModal();
       return;
     } else {
@@ -79,7 +82,7 @@ export default function VoteBtnsContainer({
 
   const handleVote = useMutation({
     mutationFn: () => {
-      return doVote(postId, userInfo.userId, selectOption);
+      return doVote(postId, userInfo?.userId, selectOption, userInfo?.accessToken);
     },
     onSuccess() {
       const queryCache = queryClient.getQueryCache();
@@ -121,7 +124,7 @@ export default function VoteBtnsContainer({
   });
 
   const onClickVotedBtn = () => {
-    if (userInfo.isLogin !== 1) return;
+    if (userInfo?.isLogin !== 1) return;
     if (!disableVoteBtn) return;
     handleVote.mutate();
   };

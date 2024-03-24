@@ -5,12 +5,12 @@ import { useState } from "react";
 import LoginModal from "@/app/_component/LoginModal";
 import ModalContainer from "@/app/_component/ModalContainer";
 import ModalPortal from "@/app/_component/ModalPortal";
-import { useUserDataContext } from "@/context/AuthContext";
 import { useModal } from "@/hook/useModal";
 import { constant } from "@/utils/constant";
 
 import { IPostData } from "../interfaces";
 import styles from "../postDetail.module.css";
+import { useSession } from "next-auth/react";
 
 interface IContentVoteProps {
   postData: IPostData;
@@ -18,22 +18,23 @@ interface IContentVoteProps {
 }
 
 export default function ContentVote({ postData, postId }: IContentVoteProps) {
+  const { data: userData } = useSession();
   const queryClient = useQueryClient();
   const { openModal, handleOpenMoal, handleCloseModal } = useModal();
-  const { userInfo } = useUserDataContext();
+  const userInfo = userData?.user;
   const [userSelectedOption, setUserSelectedOption] = useState<string | null>(null);
 
   const handleOptionClick = (option: string) => {
     setUserSelectedOption(option);
   };
 
+  const userToken = userData?.user.accessToken;
   const doVote = useMutation({
     mutationFn: async () => {
-      const userToken = localStorage.getItem("token");
       const headers: { [key: string]: string } = {};
 
       if (userToken) {
-        headers.Authorization = userToken;
+        headers.Authorization = `Bearer ${userToken}`;
       }
       const res = await fetch(constant.apiUrl + "api/main/new/vote", {
         method: "POST",
@@ -44,24 +45,23 @@ export default function ContentVote({ postData, postId }: IContentVoteProps) {
         body: JSON.stringify({
           postId,
           voteId: postId,
-          userId: userInfo.userId,
+          userId: userInfo?.userId,
           selectedOption: userSelectedOption,
         }),
       });
       return await res.json();
     },
     async onSuccess() {
-      const userToken = localStorage.getItem("token");
       const headers: { [key: string]: string } = {};
 
       if (userToken) {
-        headers.Authorization = userToken;
+        headers.Authorization = `Bearer ${userToken}`;
       }
       const updatedRes = await fetch(constant.apiUrl + `api/main/posts/${postId}`, {
         headers: headers,
       });
       const data = await updatedRes.json();
-      queryClient.setQueryData(["post", "detail", postId, userInfo.isLogin], data);
+      queryClient.setQueryData(["post", "detail", postId, userInfo?.isLogin], data);
     },
   });
 
@@ -89,7 +89,7 @@ export default function ContentVote({ postData, postId }: IContentVoteProps) {
     <div className={`${styles.voteContainer} ${postData.selectedOption ? styles.selectedOptionContainer : ""}`}>
       <button
         className={`${styles.upButton} ${postData.selectedOption ? styles.selectedOption : ""} ${postData.selectedOption && UpVoted && styles.upVoted} ${!postData.selectedOption && userSelectedOption === postData.option1 ? styles.userSelected : ""}`}
-        onClick={userInfo.isLogin !== 1 ? handleOpenMoal : () => handleOptionClick(postData.option1)}
+        onClick={userInfo?.isLogin !== 1 ? handleOpenMoal : () => handleOptionClick(postData.option1)}
         disabled={!!postData.selectedOption}
       >
         <div className={styles.voteButtonContainer}>
@@ -118,7 +118,7 @@ export default function ContentVote({ postData, postId }: IContentVoteProps) {
       </button>
       <button
         className={`${styles.downButton} ${postData.selectedOption ? styles.selectedOption : ""} ${postData.selectedOption && DownVoted && styles.downVoted} ${!postData.selectedOption && userSelectedOption === postData.option2 ? styles.userSelected : ""}`}
-        onClick={userInfo.isLogin !== 1 ? handleOpenMoal : () => handleOptionClick(postData.option2)}
+        onClick={userInfo?.isLogin !== 1 ? handleOpenMoal : () => handleOptionClick(postData.option2)}
         disabled={!!postData.selectedOption}
       >
         <div className={styles.voteButtonContainer}>

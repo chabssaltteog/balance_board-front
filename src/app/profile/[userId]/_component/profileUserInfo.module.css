@@ -42,3 +42,7 @@
   font-weight: 500;
   line-height: 150%; /* 19.5px */
 }
+.change_nickname_btn {
+  display: flex;
+  align-items: center;
+}

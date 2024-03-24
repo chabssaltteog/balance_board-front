@@ -2,11 +2,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react"; // client일떄
 import React, { ChangeEvent, FormEvent, useState } from "react";
 
 import Input from "@/app/_component/Input";
-import { useUserDataContext } from "@/context/AuthContext";
-import { constant } from "@/utils/constant";
 
 import styles from "./loginForm.module.css";
 
@@ -16,9 +15,11 @@ export interface ILogin {
     accessToken: string;
     refreshToken: string;
   };
+  refreshToken: string;
+  accessToken?: string;
   nickname: string;
   userId: number;
-  isLogin: boolean;
+  isLogin: number;
   message?: string;
   imageType: number;
   status?: number;
@@ -26,7 +27,6 @@ export interface ILogin {
 
 export default function LoginForm() {
   const router = useRouter();
-  const { setUserData } = useUserDataContext();
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -47,35 +47,16 @@ export default function LoginForm() {
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const res = await fetch(constant.apiUrl + "api/user/login", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: form.email,
-          password: form.password,
-        }),
+      const res = await signIn("credentials", {
+        username: form.email,
+        password: form.password,
+        redirect: false,
       });
-      const data: ILogin = await res.json();
-      if (data?.status === 400) {
-        setErrMsg("아이디(이메일) 또는 비밀번호를 확인해주세요!");
+      if (res && res.ok !== true) {
+        setErrMsg("login false");
         return;
       }
-      if (data?.message) {
-        setErrMsg(data.message);
-        return false;
-      }
-      if (data.jwtToken) {
-        localStorage.setItem("token", data.jwtToken?.accessToken);
-        setUserData({
-          ...data,
-          isLogin: 1,
-        });
-        router.push("/");
-      }
-      return data;
+      router.push("/");
     } catch (err) {
       console.error(err);
       setErrMsg("아이디(이메일) 또는 비밀번호를 확인해주세요!");

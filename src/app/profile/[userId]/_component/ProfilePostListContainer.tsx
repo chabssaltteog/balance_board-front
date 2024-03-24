@@ -20,8 +20,8 @@ export default function ProfilePostListContainer({ userId }: { userId: number })
     queryKey: ["profile", "post", userId, Number(profileTab)],
     queryFn: async ({ pageParam }) => {
       const page = pageParam as number;
-      const hey = await getProfilePostData(userId, Number(profileTab), page);
-      return hey.profilePosts;
+      const profilePostData = await getProfilePostData(userId, Number(profileTab), page);
+      return profilePostData.profilePosts;
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {

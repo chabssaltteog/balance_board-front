@@ -8,7 +8,6 @@ import ModalContainer from "@/app/_component/ModalContainer";
 import ModalPortal from "@/app/_component/ModalPortal";
 import DelAlertModal from "@/app/profile/[userId]/_component/DelAlertModal";
 import DeleteConfirmModal from "@/app/profile/[userId]/_component/DeleteConfirmModal";
-import { useUserDataContext } from "@/context/AuthContext";
 import { useModal } from "@/hook/useModal";
 import { constant } from "@/utils/constant";
 import { formatDay, formatTime } from "@/utils/foramattime";
@@ -18,6 +17,7 @@ import { useGetComments } from "../_hook/useGetComments";
 import { IComment } from "../interfaces";
 import styles from "../postDetail.module.css";
 import MoreCommentsButton from "./moreCommentButton";
+import { useSession } from "next-auth/react";
 
 interface CommentListProps {
   postId: number;
@@ -84,7 +84,9 @@ function Comment({ comment, postId, handleOpenDelAlertMoal }: CommentProps) {
     handleOpenMoal: handleOpenDelConfirmMoal,
     handleCloseModal: handleCloseDelConfirmModal,
   } = useModal();
-  const { userInfo } = useUserDataContext();
+  // const { userInfo } = useUserDataContext();
+  const { data: userData } = useSession();
+  const userInfo = userData?.user;
   const queryClient = useQueryClient();
   const delComment = useMutation({
     mutationFn: () => {
@@ -93,11 +95,11 @@ function Comment({ comment, postId, handleOpenDelAlertMoal }: CommentProps) {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          Authorization: `${userInfo.jwtToken.accessToken}`,
+          Authorization: `Bearer ${userInfo?.accessToken}`,
         },
         body: JSON.stringify({
           commentId: comment.commentId,
-          currentUserId: userInfo.userId,
+          currentUserId: userInfo?.userId,
         }),
       });
     },
@@ -147,7 +149,7 @@ function Comment({ comment, postId, handleOpenDelAlertMoal }: CommentProps) {
         <div className={styles.verticalLine}></div>
         <div className={styles.commentDay}>{formatDay(comment.created)}</div>
         <div className={styles.commentTime}>{formatTime(comment.created)}</div>
-        {userInfo.isLogin === 1 && userInfo.userId === comment.userId && (
+        {userInfo?.isLogin === 1 && userInfo?.userId === comment.userId && (
           <button onClick={handleOpenDelConfirmMoal} className={styles.comment_del}>
             삭제
           </button>

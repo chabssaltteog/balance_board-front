@@ -3,8 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-import { useUserDataContext } from "@/context/AuthContext";
-
+import { signOut, useSession } from "next-auth/react";
 import directon_right from "../../../public/direction-right-md.svg";
 import SettingNav from "./_component/SettingNav";
 import styles from "./setting.module.css";
@@ -12,17 +11,19 @@ import styles from "./setting.module.css";
 export default function Page() {
   const router = useRouter();
 
-  const { userInfo } = useUserDataContext();
+  const { data: userData } = useSession();
+  const userInfo = userData?.user;
 
-  const handleLogoutBtn = () => {
-    localStorage.removeItem("token");
-    userInfo.isLogin = 2;
-    router.push("/");
+  const handleLogoutBtn = async () => {
+    await signOut({
+      redirect: false,
+    });
+    router.replace("/");
   };
 
   return (
     <div className={styles.settingBox}>
-      {userInfo.isLogin === 1 ? (
+      {userInfo?.isLogin === 1 ? (
         <>
           <SettingNav title={"Setting"} />
           <div className={styles.settingContainer}>

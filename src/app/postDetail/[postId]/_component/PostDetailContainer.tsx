@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import React from "react";
 
 import NotContent from "@/app/_component/NotContent";
-import { useUserDataContext } from "@/context/AuthContext";
 
 import { useGetComments } from "../_hook/useGetComments";
 import { getPostDetailData } from "../_lib/getPostDetailData";
@@ -14,14 +13,14 @@ import CommentList from "./commentList";
 import ContentVote from "./contentVote";
 import PostContent from "./postContent";
 import UserInfo from "./userInfo";
-export default function PostDetailContainer({ postId }: { postId: number }) {
-  const { userInfo } = useUserDataContext();
-  let token: null | string = null;
-  if (userInfo.isLogin === 1) {
-    token = userInfo.jwtToken?.accessToken;
+import { ILogin } from "@/app/login/_component/LoginForm";
+export default function PostDetailContainer({ postId, userInfo }: { postId: number; userInfo: ILogin | undefined }) {
+  let token: undefined | string = undefined;
+  if (userInfo?.isLogin === 1) {
+    token = userInfo?.accessToken;
   }
   const { data: postData } = useQuery<IPostData>({
-    queryKey: ["post", "detail", postId, userInfo.isLogin],
+    queryKey: ["post", "detail", postId, Number(userInfo?.isLogin)],
     queryFn: () => {
       return getPostDetailData(postId, token);
     },
@@ -42,7 +41,7 @@ export default function PostDetailContainer({ postId }: { postId: number }) {
               <span>댓글</span>
               <span>{commentTotalCnt}</span>
             </div>
-            <CommentForm postData={postData} userImage={userInfo.imageType} />
+            <CommentForm postData={postData} userImage={userInfo?.imageType} />
             {commentTotalCnt && commentTotalCnt > 0 ? (
               <CommentList postId={postData.postId} />
             ) : (

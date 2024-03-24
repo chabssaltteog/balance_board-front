@@ -1,56 +1,84 @@
 "use client";
+import dayjs from "dayjs";
+import { jwtDecode } from "jwt-decode";
+import { useSession } from "next-auth/react";
 import React, { useEffect } from "react";
 
-import { useUserDataContext } from "@/context/AuthContext";
 import { constant } from "@/utils/constant";
 
-import { ILogin } from "../login/_component/LoginForm";
-
+interface IRefreshToken {
+  accessToken?: string;
+  message?: string;
+}
 export default function TokenLoginComponent() {
-  const { setUserData } = useUserDataContext();
-  let token: string | null = null;
-  if (typeof window !== "undefined") {
-    // Client-side-only code
-    token = localStorage.getItem("token");
-  }
-
-  const tokenLogin = async () => {
-    if (!token) {
-      setUserData({
-        email: "",
-        jwtToken: {
-          accessToken: "",
-          refreshToken: "",
-        },
-        nickname: "",
-        userId: 0,
-        isLogin: 2,
-        imageType: 0,
-      });
-      return;
+  const { update, data } = useSession();
+  const accessToken = data?.user.accessToken;
+  const refreshToken = data?.user.refreshToken;
+  /**
+   *
+   * @param type 1. token 2. refreshToken
+   */
+  const checktokenValidation = (type: number, token: string) => {
+    if (!token) return false;
+    const { exp } = jwtDecode(token);
+    if (!exp) return false;
+    let tokenTime;
+    if (type === 1) {
+      tokenTime = dayjs.unix(exp).subtract(10, "minute");
+    } else {
+      tokenTime = dayjs.unix(exp);
     }
+    const isBefore = tokenTime.isBefore(dayjs());
+    return isBefore;
+  };
+
+  // 먼저 토큰 만료시간 체크해서 10분전 토큰 재발급
+  // 만료되었으면 refreshToken 체크해서 토큰 재발급
+  // 둘다 만료되었으면 logout
+  // 매번 체크해줘야한다.
+  const tokenCheck = () => {
+    if (!accessToken || !refreshToken) return;
+    const tokenValidation = checktokenValidation(1, accessToken);
+    if (!tokenValidation) return;
+
+    const refreshTokenValidation = checktokenValidation(2, refreshToken);
+    if (refreshTokenValidation) return;
+    void handleRefreshToken();
+  };
+
+  async function handleRefreshToken() {
+    if (!accessToken) return;
+    if (!refreshToken) return;
     const res = await fetch(constant.apiUrl + "api/user/login/token", {
-      method: "POST",
+      method: "GET",
       headers: {
         Accept: "application/json",
-        Authorization: `${token}`,
+        Authorization: `Bearer ${accessToken}`,
+        refreshToken: refreshToken || "",
       },
+      credentials: "include",
     });
-    const data: ILogin = await res.json();
-    if (data.jwtToken) {
-      setUserData({
-        ...data,
-        isLogin: 1,
-      });
-    } else {
-      setUserData({
-        ...data,
-        isLogin: 2,
-      });
+
+    const data: IRefreshToken = await res.json();
+    if (data.message) {
+      console.log("token 만료");
+      return;
     }
-  };
+
+    void update({
+      accessToken: data.accessToken,
+    });
+  }
+
   useEffect(() => {
-    void tokenLogin();
-  }, []);
+    const interval = setInterval(
+      () => {
+        tokenCheck();
+      },
+      5 * 60 * 1000,
+    ); // 5분에 한 번씩 실행되도록 설정
+
+    return () => clearInterval(interval);
+  }, [refreshToken]);
   return <></>;
 }

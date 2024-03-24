@@ -5,10 +5,12 @@ import PostDetailNav from "../../_component/postDetailNav";
 import PostDetailContainer from "./_component/PostDetailContainer";
 import { getPostDetailData } from "./_lib/getPostDetailData";
 import { IPostData } from "./interfaces";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/auth";
 import styles from "./postDetail.module.css";
 
 export async function generateMetadata({ params }: { params: { postId: number } }): Promise<Metadata> {
-  const data: IPostData = await getPostDetailData(params.postId, null);
+  const data: IPostData = await getPostDetailData(params.postId, undefined);
   return {
     title: `${data.title} | 밸런스 보드`,
     description: data.content,
@@ -29,12 +31,14 @@ export async function generateMetadata({ params }: { params: { postId: number } 
 }
 
 export default async function PostDetail({ params }: { params: { postId: number } }) {
+  const session = await getServerSession(authOptions);
+  const userInfo = session?.user;
   const { postId } = params;
   const queryClient = new QueryClient();
   await queryClient.prefetchQuery({
-    queryKey: ["post", "detail", Number(postId), 0],
+    queryKey: ["post", "detail", Number(postId), userInfo?.isLogin],
     queryFn: () => {
-      return getPostDetailData(postId, null);
+      return getPostDetailData(postId, userInfo?.accessToken);
     },
   });
   const dehydratedState = dehydrate(queryClient);
@@ -43,7 +47,7 @@ export default async function PostDetail({ params }: { params: { postId: number 
     <div className={styles.postDetailBox}>
       <PostDetailNav />
       <HydrationBoundary state={dehydratedState}>
-        <PostDetailContainer postId={Number(postId)} />
+        <PostDetailContainer postId={Number(postId)} userInfo={userInfo} />
       </HydrationBoundary>
     </div>
   );
