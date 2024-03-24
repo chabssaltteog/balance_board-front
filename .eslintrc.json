@@ -24,7 +24,7 @@
   "plugins": ["react", "@typescript-eslint", "prettier", "simple-import-sort"],
   "rules": {
     "react/react-in-jsx-scope": "off",
-    "simple-import-sort/imports": "error",
+    "simple-import-sort/imports": "off",
     "simple-import-sort/exports": "error",
     "@typescript-eslint/no-unused-vars": "error",
     "@typescript-eslint/no-misused-promises": "off",
