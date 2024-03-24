@@ -1,7 +1,7 @@
 "use client";
 import dayjs from "dayjs";
 import { jwtDecode } from "jwt-decode";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import React, { useEffect } from "react";
 
 import { constant } from "@/utils/constant";
@@ -14,6 +14,7 @@ export default function TokenLoginComponent() {
   const { update, data } = useSession();
   const accessToken = data?.user.accessToken;
   const refreshToken = data?.user.refreshToken;
+  console.log(accessToken, refreshToken);
   /**
    *
    * @param type 1. token 2. refreshToken
@@ -42,32 +43,45 @@ export default function TokenLoginComponent() {
     if (!tokenValidation) return;
 
     const refreshTokenValidation = checktokenValidation(2, refreshToken);
-    if (refreshTokenValidation) return;
-    void handleRefreshToken();
+    if (refreshTokenValidation) {
+      void signOut({
+        redirect: false,
+      });
+    } else {
+      void handleRefreshToken();
+    }
   };
 
   async function handleRefreshToken() {
     if (!accessToken) return;
     if (!refreshToken) return;
-    const res = await fetch(constant.apiUrl + "api/user/login/token", {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${accessToken}`,
-        refreshToken: refreshToken || "",
-      },
-      credentials: "include",
-    });
-
-    const data: IRefreshToken = await res.json();
-    if (data.message) {
-      console.log("token 만료");
-      return;
+    try {
+      const res = await fetch(constant.apiUrl + "api/user/login/token", {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          refreshToken: refreshToken || "",
+        },
+        credentials: "include",
+      });
+      const data: IRefreshToken = await res.json();
+      if (data.message) {
+        void signOut({
+          redirect: false,
+        });
+        console.log("token 만료");
+        return;
+      }
+      void update({
+        accessToken: data.accessToken,
+      });
+    } catch (err) {
+      console.error(err);
+      void signOut({
+        redirect: false,
+      });
     }
-
-    void update({
-      accessToken: data.accessToken,
-    });
   }
 
   useEffect(() => {
